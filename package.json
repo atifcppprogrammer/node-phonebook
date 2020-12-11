@@ -1,0 +1,12 @@
+{
+  "name": "node-phonebook",
+  "version": "1.0.0",
+  "description": "A phone book project for node.js beginners",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "atifcppprogrammer",
+  "license": "MIT"
+}
