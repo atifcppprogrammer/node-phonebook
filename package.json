@@ -8,5 +8,8 @@
     "start": "node index.js"
   },
   "author": "atifcppprogrammer",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "casual": "^1.6.2"
+  }
 }
