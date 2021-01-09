@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>
+      node-phonebook | index.html
+    </title>
+    <link rel="stylesheet" href="/phonebook/styles" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+          <div class="page-container">
+            <div class="page-title">
+	      <img src = "/phonebook/assets/phonebook">
+	      <p><strong>Node Phonebook</strong></p>
+            </div>
+            <div class="search-container">
+              <form>
+                <input 
+		  type="text" class="bg-dark form-control" 
+		  id="search-input" placeholder="search name here"/> <br/>
+                <button class="btn btn-sm btn-success">Add</button>
+              </form>
+            </div>
+            <div class="card-deck">
+              <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-1"></div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    let formButton = document.querySelector("form > button");
+    let container = document.querySelector("div.card-deck");
+    let input = document.querySelector("form > input");
+    let phoneNumbers = {};
+
+    let cardTemplate = `
+      <div class="card bg-dark">
+	<img class="card-img-top" src="/phonebook/assets/phone" alt="phone">
+	<div class="card-body">
+	  <h5 class="card-title">
+	    NAME <img src = "https://www.countryflags.io/COUNTRY/flat/32.png">
+	  </h5>
+	  <p class="card-text">
+	    <span><strong>PHONENUMBER</strong></span> &nbsp;
+	    <span><strong>EMAIL</strong></span> <br>
+	  </p>
+	  <div class = "card-buttons">
+	    <a href="#" class="btn btn-sm btn-warning">Edit</a>
+	    <a href="#" class="btn btn-sm btn-danger">Delete</a>
+	  </div>
+	</div>
+      </div>`;
+
+    let spinnerTemplate = `
+      <div class="spinner-border" role="status">
+	<span class="sr-only">Loading...</span>
+      </div>`;
+
+    const createRandomDelay = () => {
+      const delays = [400, 500, 700, 800, 900, 1000, 1200];
+      const delay = delays[Math.floor(Math.random() * delays.length)];
+      return new Promise((resolve) => setTimeout(resolve, delay));
+    };
+
+    const removePhoneNumberWithId = (id, node) => {
+      return async () => {
+        try {
+          addSpinnerToDOM();
+	  input.disabled = true;
+          await createRandomDelay();
+          const response = await fetch("/api/v1/phonebook/remove", {
+            body: JSON.stringify({ id }),
+            method: "post",
+          });
+          const content = await response.json();
+	  delete phoneNumbers[id];
+          node.remove();
+	  input.disabled = false;
+          addPhoneNumbersToDOM(phoneNumbers);
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    };
+
+    const fetchPhoneNumbers = async () => {
+      try {
+        input.disabled = true;
+        await createRandomDelay();
+        const response = await fetch("/api/v1/phonebook/get");
+        const content = await response.json();
+        phoneNumbers = content.payload.phoneNumbers;
+        input.disabled = false;
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const openEditPageForPhoneNumberWithId = (id) => {
+      return () => window.open(`/phonebook/edit?id=${id}`, "_self");
+    };
+
+    const findMatchingPhoneNumbers = (e) => {
+      e.preventDefault();
+      const value = e.target.value;
+      const matchingPhoneNumbers = Object.values(phoneNumbers).filter(
+	phoneNumber => phoneNumber.name.match(value) !== null
+      );
+      addPhoneNumbersToDOM(matchingPhoneNumbers);
+    };
+
+    const openAddNewPhoneNumber = (e) => {
+      e.preventDefault();
+      window.open("/phonebook/add", "_self");
+    };
+    const addSpinnerToDOM = () => {
+      container.innerHTML = "";
+      const element = document.createElement("template");
+      const html = spinnerTemplate.trim();
+      element.innerHTML = html;
+      const content = element.content.querySelector("div.spinner-border");
+      const node = document.importNode(content, true);
+      container.appendChild(node);
+    };
+
+    const addPhoneNumbersToDOM = (phoneNumbers) => {
+      container.innerHTML = "";
+      Object.values(phoneNumbers).forEach((phoneNumber) => {
+        const element = document.createElement("template");
+        const html = cardTemplate
+	  .replace("PHONENUMBER", phoneNumber.phoneNumber)
+	  .replace("COUNTRY", phoneNumber.country)
+	  .replace("EMAIL", phoneNumber.email)
+	  .replace("NAME", phoneNumber.name)
+	  .trim();
+        element.innerHTML = html;
+        const content = element.content.querySelector("div.card");
+        const node = document.importNode(content, true);
+        container.appendChild(node);
+
+        const { id } = phoneNumber;
+        const deleteButton = node.querySelector(".btn-danger");
+        deleteButton.addEventListener("click", 
+	  removePhoneNumberWithId(id, node));
+
+        const editButton = node.querySelector(".btn-warning");
+        editButton.addEventListener("click", 
+	  openEditPageForPhoneNumberWithId(id));
+      });
+    };
+
+    (async () => {
+      formButton.addEventListener("click", openAddNewPhoneNumber);
+      input.addEventListener("input", findMatchingPhoneNumbers);
+      await fetchPhoneNumbers();
+      addPhoneNumbersToDOM(phoneNumbers);
+    })();
+  </script>
+</html>
+

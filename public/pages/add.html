@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>node-phonebook | add</title>
+    <link rel="stylesheet" href="/phonebook/styles">
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-1"> </div>
+        <div class="col-md-10">
+	  <div class="page-container">
+	    <div class="page-title">
+	      <img src="/phonebook/assets/phonebook">
+	      <p><strong>Add Phone Number</strong></p>
+	    </div>
+	    <div class="form-container">
+	      <form>
+		<div class="form-group">
+		  <input 
+		    id="name" 
+		    class="bg-dark"
+		    type="text"
+		    name="name"
+		    value=""
+		    placeholder="enter name here" 
+		    required>
+		</div>
+		<div class="form-group">
+		  <input 
+		    id="phoneNumber"
+		    class="bg-dark"
+		    type="tel"
+		    name="phoneNumber"
+		    value=""
+		    pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+		    placeholder="enter your phonenumber here e.g 111-222-3333"
+		    required>
+		</div>
+		<div class="form-group">
+		  <input 
+		    id="email"
+		    class="bg-dark"
+		    type="email"
+		    name="email"
+		    value=""
+		    placeholder="enter email here"
+		    required>
+		</div>
+		<div class="form-group">
+		  <input 
+		  id="country"
+		  class="bg-dark"
+		  type="" 
+		  name="country"
+		  value=""
+		  maxlength="2"
+		  placeholder="enter country code here"
+		  required>
+		</div>
+		<button class="btn btn-sm btn-success">Submit</button>
+	      </form>
+	      <div class = "spinner-container">
+		<div class="spinner-border" role="status">
+		  <span class="sr-only">Loading...</span>
+		</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+        <div class="col-md-1"> </div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    const getNodeWithId = id => document.getElementById(id);
+
+    const spinnerContainer = document.querySelector('.spinner-container');
+    const formButton = document.querySelector('form > button');
+    const form = document.querySelector('form');
+    const formInputs = [ 
+      'name', 'phoneNumber', 'email', 'country'
+    ].map(getNodeWithId);
+
+    const createRandomDelay = () => {
+      const delays = [800, 1000, 1200, 1500, 1600];
+      const delay = delays[Math.floor(Math.random() * delays.length)];
+      return new Promise((resolve) => setTimeout(resolve, delay));
+    };
+
+    const handleSubmit = async e => {
+      e.preventDefault();
+      if (!form.checkValidity()) {
+	form.reportValidity(); return;
+      }
+      try {
+	const body = { 
+	  entry: { 
+	    phoneNumber: formInputs[1].value,
+	    country: formInputs[3].value,
+	    email: formInputs[2].value,
+	    name: formInputs[0].value
+	  }
+	}
+	spinnerContainer.style.visibility = 'visible';
+	form.style.display = 'none';
+	await createRandomDelay();
+	await fetch('/api/v1/phonebook/add', {
+	  'Content-Type': 'application/json',
+          'body': JSON.stringify(body),
+	  'method': 'post'
+	});
+	spinnerContainer.style.visibility = 'hidden';
+	open('/', '_self');
+      }
+      catch (error) { console.log(error) }
+    }
+
+    (() => {
+      formButton.addEventListener('click', handleSubmit);
+    })();
+  </script>
+</html>
